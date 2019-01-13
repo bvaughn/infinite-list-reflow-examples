@@ -11,6 +11,7 @@ function createList(container, books) {
   let estimatedItemHeight = 30;
   let lastMeasuredIndex = -1;
   let totalMeasuredItemHeights = 0;
+  let previousScrollTop = 0;
 
   function findItemIndexForOffset(offset) {
     // If we've already positioned and measured past this point,
@@ -51,8 +52,6 @@ function createList(container, books) {
     return totalMeasuredItemHeights + estimatedUnmeasuredItemHeights;
   }
 
-  // TODO Adjust scroll offset by delta when scrolling backwards
-
   function renderBook(container, bookJSON) {
     const link = document.createElement('a');
     link.href = `https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords=${escape(bookJSON.title)}`
@@ -63,8 +62,9 @@ function createList(container, books) {
     container.appendChild(link);
     container.appendChild(authors);
 
-    if (bookJSON.longDescription != null) {
-      const description = document.createTextNode(bookJSON.longDescription);
+    const descriptionText = bookJSON.longDescription || bookJSON.shortDescription;
+    if (descriptionText != null) {
+      const description = document.createTextNode(descriptionText);
 
       container.appendChild(document.createElement('br'));
       container.appendChild(document.createElement('br'));
@@ -96,6 +96,7 @@ function createList(container, books) {
 
     let index = startIndex;
     let offset = indexToCachedOffsetMap.get(startIndex) || 0;
+    let scrollTopAdjustments = 0;
     while (index < booksCount && offset < scrollTop + listHeight) {
       let prevItemOffset = indexToCachedOffsetMap.has(index - 1) ? indexToCachedOffsetMap.get(index - 1) : 0;
       let prevItemSize = indexToCachedSizeMap.has(index - 1) ? indexToCachedSizeMap.get(index - 1) : 0;
@@ -126,7 +127,16 @@ function createList(container, books) {
       itemSize = item.offsetHeight;
 
       if (indexToCachedSizeMap.has(index)) {
-        totalMeasuredItemHeights += itemSize - indexToCachedSizeMap.get(index);
+        let itemSizeDelta = itemSize - indexToCachedSizeMap.get(index);
+
+        // If we're scrolling up and item size has changed, note the delta.
+        // We'll need to adjust scroll by this amount to preserve the appearance of smooth scrolling.
+        // Else items will appear to jump around while the user scrolls.
+        if (previousScrollTop > scrollTop && itemSizeDelta !== 0) {
+          scrollTopAdjustments += itemSizeDelta;
+        }
+
+        totalMeasuredItemHeights += itemSizeDelta;
       } else {
         totalMeasuredItemHeights += itemSize;
       }
@@ -149,6 +159,13 @@ function createList(container, books) {
         listInner.removeChild(item);
       }
     }
+
+    // If item sizes have changed, adjust scroll to preserve the appearance of smooth scrolling.
+    if (scrollTopAdjustments !== 0) {
+      listOuter.scrollTop = scrollTop + scrollTopAdjustments;
+    }
+
+    previousScrollTop = scrollTop;
 
     // TODO Return hidden books to the pool
 
