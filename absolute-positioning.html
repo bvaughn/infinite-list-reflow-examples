@@ -9,10 +9,32 @@
   <script type="text/javascript">
     fetch('./books.json')
       .then(response => response.json())
-      .then(json => {
+      .then(booksJSON => {
         const container = document.getElementById('container');
 
-        createList(container, json);
+        function renderBook(index, container) {
+          const bookJSON = booksJSON[index];
+
+          const link = document.createElement('a');
+          link.href = `https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords=${escape(bookJSON.title)}`
+          link.text = bookJSON.title;
+
+          const authors = document.createTextNode(` by ${bookJSON.authors.join(', ')}`);
+
+          container.appendChild(link);
+          container.appendChild(authors);
+
+          const descriptionText = bookJSON.longDescription || bookJSON.shortDescription;
+          if (descriptionText != null) {
+            const description = document.createTextNode(descriptionText);
+
+            container.appendChild(document.createElement('br'));
+            container.appendChild(document.createElement('br'));
+            container.appendChild(description);
+          }
+        }
+
+        createList(container, booksJSON.length, renderBook);
       });
   </script>
 </body>
