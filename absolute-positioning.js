@@ -1,7 +1,8 @@
-function createList(container, itemsCount, renderItem) {
+function createList(container, itemsCount, createItem, updateItem) {
   const indexToCachedSizeMap = new Map();
   const indexToCachedOffsetMap = new Map();
-  const renderedItems = new Map();
+  const itemPool = new Set();
+  const visibleItems = new Map();
 
   let listOuter = null;
   let listInner = null;
@@ -47,7 +48,16 @@ function createList(container, itemsCount, renderItem) {
     const numUnmeasuredItems = itemsCount - lastMeasuredIndex - 1;
     const estimatedUnmeasuredItemHeights = numUnmeasuredItems * estimatedItemHeight;
 
-    return totalMeasuredItemHeights + estimatedUnmeasuredItemHeights;
+    const estimatedHeight = totalMeasuredItemHeights + estimatedUnmeasuredItemHeights;
+
+    if (lastMeasuredIndex === itemsCount -1) {
+      return Math.min(
+        estimatedHeight,
+        indexToCachedOffsetMap.get(lastMeasuredIndex) + indexToCachedSizeMap.get(lastMeasuredIndex)
+      );
+    }
+
+    return estimatedHeight;
   }
 
   function init() {
@@ -64,8 +74,6 @@ function createList(container, itemsCount, renderItem) {
     window.addEventListener('resize', renderItems);
     listOuter.addEventListener('scroll', renderItems);
   }
-
-  // TODO Pool items
 
   function renderItems() {
     const scrollTop = listOuter.scrollTop;
@@ -84,19 +92,28 @@ function createList(container, itemsCount, renderItem) {
       let itemSize;
       let item;
 
-      if (renderedItems.has(index)) {
-        item = renderedItems.get(index);
-        item.style.setProperty('top', offset);
+      if (visibleItems.has(index)) {
+        item = visibleItems.get(index);
+        item.style.setProperty('top', offset); // TODO Is this necessary?
       } else {
-        item = document.createElement('div');
-        item.className = 'list-item';
-        item.style.setProperty('width', '100%');
-        item.style.setProperty('position', 'absolute');
+        if (itemPool.size > 0) {
+          item = itemPool.values().next().value;
+
+          itemPool.delete(item);
+        } else {
+          item = document.createElement('div');
+          item.className = 'list-item';
+          item.style.setProperty('width', '100%');
+          item.style.setProperty('position', 'absolute');
+
+          createItem(item);
+        }
+
         item.style.setProperty('top', offset);
 
-        renderItem(index, item);
+        updateItem(item, index);
 
-        renderedItems.set(index, item);
+        visibleItems.set(index, item);
 
         listInner.appendChild(item);
       }
@@ -106,14 +123,16 @@ function createList(container, itemsCount, renderItem) {
       if (indexToCachedSizeMap.has(index)) {
         let itemSizeDelta = itemSize - indexToCachedSizeMap.get(index);
 
-        // If we're scrolling up and item size has changed, note the delta.
-        // We'll need to adjust scroll by this amount to preserve the appearance of smooth scrolling.
-        // Else items will appear to jump around while the user scrolls.
-        if (previousScrollTop > scrollTop && itemSizeDelta !== 0) {
-          scrollTopAdjustments += itemSizeDelta;
-        }
+        if (itemSizeDelta !== 0) {
+          totalMeasuredItemHeights += itemSizeDelta;
 
-        totalMeasuredItemHeights += itemSizeDelta;
+          // If we're scrolling up and item size has changed, note the delta.
+          // We'll need to adjust scroll by this amount to preserve the appearance of smooth scrolling.
+          // Else items will appear to jump around while the user scrolls.
+          if (previousScrollTop > scrollTop) {
+            scrollTopAdjustments += itemSizeDelta;
+          }
+        }
       } else {
         totalMeasuredItemHeights += itemSize;
       }
@@ -122,6 +141,7 @@ function createList(container, itemsCount, renderItem) {
       indexToCachedOffsetMap.set(index, offset);
 
       lastMeasuredIndex = Math.max(index, lastMeasuredIndex);
+      estimatedItemHeight = Math.round(totalMeasuredItemHeights / (lastMeasuredIndex + 1));
 
       index++;
       offset += itemSize;
@@ -129,11 +149,15 @@ function createList(container, itemsCount, renderItem) {
 
     const stopIndex = index - 1;
 
-    for (let [index, item] of renderedItems.entries()) {
+    // Remove items that are no longer visible and return them to the pool.
+    for (let [index, item] of visibleItems.entries()) {
       if (index < startIndex || index > stopIndex) {
-        let item = renderedItems.get(index);
-        renderedItems.delete(index);
+        let item = visibleItems.get(index);
+        visibleItems.delete(index);
+
         listInner.removeChild(item);
+
+        itemPool.add(item);
       }
     }
 
@@ -143,8 +167,6 @@ function createList(container, itemsCount, renderItem) {
     }
 
     previousScrollTop = scrollTop;
-
-    // TODO Return hidden items to the pool
 
     listInner.style.setProperty('height', estimateTotalScrollHeight());
   }

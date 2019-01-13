@@ -12,29 +12,37 @@
       .then(booksJSON => {
         const container = document.getElementById('container');
 
-        function renderBook(index, container) {
-          const bookJSON = booksJSON[index];
-
+        function createItem(container) {
           const link = document.createElement('a');
-          link.href = `https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords=${escape(bookJSON.title)}`
-          link.text = bookJSON.title;
+          link.className = 'link';
 
-          const authors = document.createTextNode(` by ${bookJSON.authors.join(', ')}`);
+
+          const authors = document.createElement('span');
+          authors.className = 'authors';
+
+          const description = document.createElement('p');
+          description.className = 'description';
 
           container.appendChild(link);
           container.appendChild(authors);
-
-          const descriptionText = bookJSON.longDescription || bookJSON.shortDescription;
-          if (descriptionText != null) {
-            const description = document.createTextNode(descriptionText);
-
-            container.appendChild(document.createElement('br'));
-            container.appendChild(document.createElement('br'));
-            container.appendChild(description);
-          }
+          container.appendChild(description);
         }
 
-        createList(container, booksJSON.length, renderBook);
+        function updateItem(container, index) {
+          const bookJSON = booksJSON[index];
+
+          const link = container.querySelector('.link');
+          link.href = `https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords=${escape(bookJSON.title)}`
+          link.text = bookJSON.title;
+
+          const authors = container.querySelector('.authors');
+          authors.innerText = ` by ${bookJSON.authors.join(', ')}`;
+
+          const description = container.querySelector('.description');
+          description.innerText = bookJSON.longDescription || bookJSON.shortDescription || 'N/A';
+        }
+
+        createList(container, booksJSON.length, createItem, updateItem);
       });
   </script>
 </body>
