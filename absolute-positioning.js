@@ -1,9 +1,9 @@
-function createList(container, items) {
+function createList(container, books) {
   const indexToCachedSizeMap = new Map();
   const indexToCachedOffsetMap = new Map();
   const renderedItems = new Map();
 
-  const itemsCount = items.length;
+  const booksCount = books.length;
 
   let listOuter = null;
   let listInner = null;
@@ -45,7 +45,7 @@ function createList(container, items) {
   };
 
   function estimateTotalScrollHeight() {
-    const numUnmeasuredItems = itemsCount - lastMeasuredIndex - 1;
+    const numUnmeasuredItems = booksCount - lastMeasuredIndex - 1;
     const estimatedUnmeasuredItemHeights = numUnmeasuredItems * estimatedItemHeight;
 
     return totalMeasuredItemHeights + estimatedUnmeasuredItemHeights;
@@ -53,13 +53,32 @@ function createList(container, items) {
 
   // TODO Adjust scroll offset by delta when scrolling backwards
 
+  function renderBook(container, bookJSON) {
+    const link = document.createElement('a');
+    link.href = `https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords=${escape(bookJSON.title)}`
+    link.text = bookJSON.title;
+
+    const authors = document.createTextNode(` by ${bookJSON.authors.join(', ')}`);
+
+    container.appendChild(link);
+    container.appendChild(authors);
+
+    if (bookJSON.longDescription != null) {
+      const description = document.createTextNode(bookJSON.longDescription);
+
+      container.appendChild(document.createElement('br'));
+      container.appendChild(document.createElement('br'));
+      container.appendChild(description);
+    }
+  }
+
   function init() {
     listOuter = document.createElement('div');
     listOuter.className = 'list-outer';
 
     listInner = document.createElement('div');
     listInner.className = 'list-inner';
-    listInner.style.setProperty('height', itemsCount * estimatedItemHeight);
+    listInner.style.setProperty('height', booksCount * estimatedItemHeight);
 
     listOuter.appendChild(listInner);
     container.appendChild(listOuter);
@@ -68,7 +87,7 @@ function createList(container, items) {
     listOuter.addEventListener('scroll', renderItems);
   }
 
-  // TODO Pool items
+  // TODO Pool books
 
   function renderItems() {
     const scrollTop = listOuter.scrollTop;
@@ -77,7 +96,7 @@ function createList(container, items) {
 
     let index = startIndex;
     let offset = indexToCachedOffsetMap.get(startIndex) || 0;
-    while (index < itemsCount && offset < scrollTop + listHeight) {
+    while (index < booksCount && offset < scrollTop + listHeight) {
       let prevItemOffset = indexToCachedOffsetMap.has(index - 1) ? indexToCachedOffsetMap.get(index - 1) : 0;
       let prevItemSize = indexToCachedSizeMap.has(index - 1) ? indexToCachedSizeMap.get(index - 1) : 0;
 
@@ -90,10 +109,11 @@ function createList(container, items) {
         item = renderedItems.get(index);
         item.style.setProperty('top', offset);
       } else {
+        let book = books[index];
 
         item = document.createElement('div');
         item.className = 'list-item';
-        item.innerText = `${index}: ${items[index]}`;
+        renderBook(item, book);
         item.style.setProperty('width', '100%');
         item.style.setProperty('position', 'absolute');
         item.style.setProperty('top', offset);
@@ -130,7 +150,7 @@ function createList(container, items) {
       }
     }
 
-    // TODO Return hidden items to the pool
+    // TODO Return hidden books to the pool
 
     listInner.style.setProperty('height', estimateTotalScrollHeight());
   }

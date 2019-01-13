@@ -8,10 +8,13 @@
   <script type="text/javascript" src="shared.js"></script>
   <script type="text/javascript" src="absolute-positioning.js"></script>
   <script type="text/javascript">
-    const items = createItems();
-    const container = document.getElementById('container');
+    fetch('./books.json')
+      .then(response => response.json())
+      .then(json => {
+        const container = document.getElementById('container');
 
-    createList(container, items);
+        createList(container, json);
+      });
   </script>
 </body>
 </html>
