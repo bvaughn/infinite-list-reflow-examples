@@ -4,5 +4,5 @@ Demos to accompany the ["Infinite lists and reflow" gist](https://gist.github.co
 
 ```sh
 npm install
-npm run demo:absolute
+npm run start
 ```
