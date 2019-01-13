@@ -1,0 +1,15 @@
+{
+  "name": "infinite-list-reflow-examples",
+  "version": "0.0.0",
+  "description": "Examples illustrating reflow handling with infinite lists",
+  "main": "list-absolute-positioning.js",
+  "scripts": {
+    "demo:absolute": "concurrently 'http-server -a localhost -p 1234' 'open http://localhost:1234/list-absolute-positioning.html'"
+  },
+  "author": "Brian Vaughn <brian.david.vaughn@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^4.1.0",
+    "http-server": "^0.11.1"
+  }
+}
