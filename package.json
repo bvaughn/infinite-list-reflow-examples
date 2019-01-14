@@ -5,6 +5,7 @@
   "author": "Brian Vaughn <brian.david.vaughn@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "deploy": "now deploy && now alias",
     "start": "concurrently 'http-server -a localhost -p 1234' 'open http://localhost:1234/'"
   },
   "devDependencies": {
