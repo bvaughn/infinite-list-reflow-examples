@@ -163,7 +163,16 @@ function createList(container, itemsCount, createItem, updateItem) {
 
     // If item sizes have changed, adjust scroll to preserve the appearance of smooth scrolling.
     if (scrollTopAdjustments !== 0) {
-      listOuter.scrollTop = scrollTop + scrollTopAdjustments;
+      // Adjusting scroll offset directly interrupts smooth scrolling for some browsers (e.g. Firefox)
+      // but works well in other browsers tested (e.g. Chrome, Safari).
+      // The relative scrollBy() method does not cause this interrupt for Firefox v65+
+      // so if it's available, use it instead.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1502059
+      if (typeof listOuter.scrollBy === 'function') {
+         listOuter.scrollBy(scrollTopAdjustments);
+      } else {
+        listOuter.scrollTop = scrollTop + scrollTopAdjustments;
+      }
     }
 
     previousScrollTop = scrollTop;
