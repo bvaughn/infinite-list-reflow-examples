@@ -169,7 +169,11 @@ function createList(container, itemsCount, createItem, updateItem) {
       // so if it's available, use it instead.
       // See https://bugzilla.mozilla.org/show_bug.cgi?id=1502059
       if (typeof listOuter.scrollBy === 'function') {
-         listOuter.scrollBy(scrollTopAdjustments);
+        listOuter.scrollBy({
+          top: scrollTopAdjustments,
+          left: 0,
+          behavior: 'auto'
+        });
       } else {
         listOuter.scrollTop = scrollTop + scrollTopAdjustments;
       }
