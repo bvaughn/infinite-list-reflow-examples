@@ -1,0 +1,45 @@
+[
+  {
+    "model": "Toyota",
+    "marka": "Camry",
+    "deposit": 50000,
+    "photoUrl": "https://cutt.ly/aua6ZNu",
+    "price": {
+      "1day": 30000,
+      "10day": 25000,
+      "20day": 20000,
+      "30day": 15000
+    },
+    "transmission": "auto",
+    "volume": 2.5
+  },
+  {
+    "model": "Toyota",
+    "marka": "Camry",
+    "deposit": 50000,
+    "photoUrl": "https://cutt.ly/aua6ZNu",
+    "price": {
+      "1day": 30000,
+      "10day": 25000,
+      "20day": 20000,
+      "30day": 15000
+    },
+    "transmission": "auto",
+    "volume": 2.5
+  },5
+  {
+    "model": "Toyota",
+    "marka": "Camry",
+    "deposit": 50000,
+    "photoUrl": "https://cutt.ly/aua6ZNu",
+    "price": {
+      "1day": 30000,
+      "10day": 25000,
+      "20day": 20000,
+      "30day": 15000
+    },
+    "transmission": "auto",
+    "volume": 2.5
+  }
+]
+
